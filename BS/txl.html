@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>个人通讯录系统</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        input[type=text], input[type=tel] {
+            padding: 8px;
+            margin: 4px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            width: 100%;
+        }
+        input[type=button] {
+            background-color: #4CAF50;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        input[type=button]:hover {
+            background-color: #45a049;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 10% auto;
+            padding: 16px;
+            border: 1px solid #888;
+            width: 50%;
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close:hover, .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>个人通讯录系统</h1>
+    <input type="text" id="keyword" placeholder="请输入关键字">
+    <input type="button" value="搜索" onclick="searchContacts()">
+    <input type="button" value="添加联系人" onclick="showAddModal()">
+    <table id="contacts">
+        <tr>
+            <th>姓名</th>
+            <th>住址</th>
+            <th>电话</th>
+            <th>操作</th>
+        </tr>
+    </table>
+    <div id="addModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="hideAddModal()">&times;</span>
+            <h2>添加联系人</h2>
+            <input type="text" id="name" placeholder="请输入姓名">
+            <input type="text" id="address" placeholder="请输入住址">
+            <input type="tel" id="phone" placeholder="请输入电话">
+            <input type="button" value="确定" onclick="addContact()">
+        </div>
+    </div>
+    <div id="updateModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="hideUpdateModal()">&times;</span>
+            <h2>更新联系人</h2>
+            <input type="text" id="updateName" placeholder="请输入姓名" readonly>
+            <input type="text" id="updateAddress" placeholder="请输入住址">
+            <input type="tel" id="updatePhone" placeholder="请输入电话">
+            <input type="button" value="确定" onclick="updateContact()">
+        </div>
+    </div>
+    <div id="deleteModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="hideDeleteModal()">&times;</span>
+            <h2>删除联系人</h2>
+            <p>确定要删除该联系人吗？</p>
+            <input type="text" id="deleteName" placeholder="请输入姓名" readonly>
+            <input type="button" value="确定" onclick="deleteContact()">
+        </div>
+    </div>
+    <script>
+        // 获取联系人列表
+        function getContacts() {
+            var xhr = new XMLHttpRequest();
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState == 4 && xhr.status == 200) {
+                    var contacts = JSON.parse(xhr.responseText);
+                    var table = document.getElementById('contacts');
+                    table.innerHTML = '<tr><th>姓名</th><th>住址</th><th>电话</th><th>操作</th></tr>';
+                    for (var i = 0; i < contacts.length; i++) {
+                        var row = table.insertRow(-1);
+                        var nameCell = row.insertCell(0);
+                        var addressCell = row.insertCell(1);
+                        var phoneCell = row.insertCell(2);
+                        var actionCell = row.insertCell(3);
+                        nameCell.innerHTML = contacts[i].name;
+                        addressCell.innerHTML = contacts[i].address;
+                        phoneCell.innerHTML = contacts[i].phone;
+                        actionCell.innerHTML = '<input type="button" value="更新" onclick="showUpdateModal(\'' + contacts[i].name + '\', \'' + contacts[i].address + '\', \'' + contacts[i].phone + '\')">' +
+                                                '<input type="button" value="删除" onclick="showDeleteModal(\'' + contacts[i].name + '\')">';
+                    }
+                }
+            };
+            xhr.open('GET', '/contacts');
+            xhr.send();
+        }
+
+        // 搜索联系人
+        function searchContacts() {
+            var keyword = document.getElementById('keyword').value;
+            var xhr = new XMLHttpRequest();
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState == 4 && xhr.status == 200) {
+                    var contacts = JSON.parse(xhr.responseText);
+                    var table = document.getElementById('contacts');
+                    table.innerHTML = '<tr><th>姓名</th><th>住址</th><th>电话</th><th>操作</th></tr>';
+                    for (var i = 0; i < contacts.length; i++) {
+                        var row = table.insertRow(-1);
+                        var nameCell = row.insertCell(0);
+                        var addressCell = row.insertCell(1);
+                        var phoneCell = row.insertCell(2);
+                        var actionCell = row.insertCell(3);
+                        nameCell.innerHTML = contacts[i].name;
+                        addressCell.innerHTML = contacts[i].address;
+                        phoneCell.innerHTML = contacts[i].phone;
+                        actionCell.innerHTML = '<input type="button" value="更新" onclick="showUpdateModal(\'' + contacts[i].name + '\', \'' + contacts[i].address + '\', \'' + contacts[i].phone + '\')">' +
+                                                '<input type="button" value="删除" onclick="showDeleteModal(\'' + contacts[i].name + '\')">';
+                    }
+                }
+            };
+            xhr.open('GET', '/contacts?keyword=' + keyword);
+            xhr.send();
+        }
+
+        // 显示添加联系人对话框
+        function showAddModal() {
+            document.getElementById('addModal').style.display = 'block';
+        }
+
+        // 隐藏添加联系人对话框
+        function hideAddModal() {
+            document.getElementById('addModal').style.display = 'none';
+        }
+
+        // 添加联系人
+        function addContact() {
+            var name = document.getElementById('name').value;
+            var address = document.getElementById('address').value;
+            var phone = document.getElementById('phone').value;
+            var xhr = new XMLHttpRequest();
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState == 4 && xhr.status == 200) {
+                    alert(xhr.responseText);
+                    hideAddModal();
+                    getContacts();
+                }
+            };
+            xhr.open('POST', '/contacts');
+            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+            xhr.send('name=' + name + '&address=' + address + '&phone=' + phone);
+        }
+
+        // 显示更新联系人对话框
+        function showUpdateModal(name, address, phone) {
+            document.getElementById('updateName').value = name;
+            document.getElementById('updateAddress').value = address;
+            document.getElementById('updatePhone').value = phone;
+            document.getElementById('updateModal').style.display = 'block';
+        }
+
+        // 隐藏更新联系人对话框
+        function hideUpdateModal() {
+            document.getElementById('updateModal').style.display = 'none';
+        }
+
+        // 更新联系人
+        function updateContact() {
+            var name = document.getElementById('updateName').value;
+            var address = document.getElementById('updateAddress').value;
+            var phone = document.getElementById('updatePhone').value;
+            var xhr = new XMLHttpRequest();
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState == 4 && xhr.status == 200) {
+                    alert(xhr.responseText);
+                    hideUpdateModal();
+                    getContacts();
+                }
+            }
+        }

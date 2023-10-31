@@ -1,0 +1,2 @@
+CREATE TABLE IF NOT EXISTS contacts
+(name TEXT PRIMARY KEY, address TEXT, phone TEXT)
